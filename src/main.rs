@@ -1,25 +1,39 @@
-use std::collections::HashSet;
+use std::io::Write;
+use std::{collections::HashSet, fs::File};
 
+use instances::InstanceReadError;
+use petgraph::adj::NodeIndex;
+use petgraph::dot::Config;
+use petgraph::visit::{NodeRef, NodeIndexable};
 use petgraph::{dot::Dot, visit::EdgeRef, Graph};
 
-use crate::algos::{tsiligiridi_s_algo::SAlgorithm, OrienteeringAlgo};
+use crate::algos::{tsiligirides_s_algo::SAlgorithm, OrienteeringAlgo};
 
 mod algos;
+mod instances;
 
-fn main() {
-    let graph = problem_graph();
+fn main() -> Result<(), InstanceReadError> {
+    let (graph, node_positions) = instances::read_instance("res/tsiligirides2.txt")?;
 
     let path =
-        match SAlgorithm::new(0.5f64, 10).generate_path(&graph, 0, graph.node_count() - 1, 150.0) {
+        match SAlgorithm::new(0.5f64, 10).generate_path(&graph, 0, graph.node_count() - 1, 20f64) {
             Some(path) => path,
-            None => return,
-        }
-        .collect::<Vec<_>>();
+            None => {
+                println!("No path found");
+                return Ok(());
+            }
+        };
+    println!("Found path: {path:?}");
+    println!(
+        "Path score: {}",
+        path.iter().map(|&n| graph[graph.from_index(n)]).sum::<f64>()
+    );
+
     let path_edges = path
         .windows(2)
         .map(|edge| {
             graph
-                .edges_connecting(edge[0], edge[1])
+                .edges_connecting(edge[0].into(), edge[1].into())
                 .next()
                 .unwrap()
                 .id()
@@ -27,27 +41,41 @@ fn main() {
         .collect::<HashSet<_>>();
     let path = path.into_iter().collect::<HashSet<_>>();
 
-    //println!("Path: {:?}", path.map(|iter| iter.collect::<Vec<_>>()));
-
     println!(
+        "Path weight: {}",
+        path_edges.iter().map(|&e| graph[e]).sum::<f64>()
+    );
+
+    let mut out_file = File::create("out.dot")?;
+
+    writeln!(
+        &mut out_file,
         "{}",
         Dot::with_attr_getters(
             &graph,
-            &[],
+            &[Config::EdgeNoLabel],
             &|_, edge| if path_edges.contains(&edge.id()) {
                 "color=red".to_owned()
             } else {
-                "".to_owned()
+                "style=invis".to_owned()
             },
-            &|_, node| if path.contains(&node.0) {
-                "color=red".to_owned()
+            &|_, node| format!(
+                "pos=\"{},{}!\" ",
+                node_positions[node.0.index()].0,
+                node_positions[node.0.index()].1
+            ) + if node.0.index() == 0 || node.0.index() == graph.node_count() - 1 {
+                "color=pink"
+            } else if path.contains(&node.0.index()) {
+                "color=red"
             } else {
-                "".to_owned()
+                ""
             }
         )
-    );
+    )?;
+    Ok(())
 }
 
+#[allow(unused)]
 fn rnd_graph() -> Graph<f64, f64, petgraph::Undirected> {
     let mut graph = Graph::new_undirected();
 
@@ -81,6 +109,7 @@ fn rnd_graph() -> Graph<f64, f64, petgraph::Undirected> {
     graph
 }
 
+#[allow(unused)]
 fn problem_graph() -> Graph<f64, f64, petgraph::Undirected> {
     let mut graph = Graph::new_undirected();
 

@@ -1,9 +1,8 @@
-use std::{cmp::Ordering, fmt::Display};
+use std::cmp::Ordering;
 use std::fmt::Debug;
 
 use petgraph::{
-    stable_graph::IndexType,
-    visit::GraphBase,
+    adj::{ NodeIndex, IndexType},
     visit::{EdgeRef, NodeIndexable, NodeRef},
     Graph, Undirected,
 };
@@ -26,15 +25,12 @@ impl SAlgorithm {
     }
 }
 
-impl<Idx> OrienteeringAlgo<f64, f64, Undirected, Idx> for SAlgorithm
-where
-    Idx: IndexType + Copy {
-    type PathType =
-        <Vec<<Graph<f64, f64, Undirected, Idx> as GraphBase>::NodeId> as IntoIterator>::IntoIter;
+impl OrienteeringAlgo<f64, f64, Undirected, usize> for SAlgorithm {
+    type PathType = Vec<NodeIndex<usize>>;
 
     fn generate_path(
         &mut self,
-        graph: &Graph<f64, f64, Undirected, Idx>,
+        graph: &Graph<f64, f64, Undirected, usize>,
         start: usize,
         end: usize,
         max: f64,
@@ -46,7 +42,7 @@ where
 
         // Initializazion
         let mut current = start;
-        let mut path = vec![start_node];
+        let mut path = vec![start];
         let mut current_cost = 0.0;
         let mut taken = vec![false; n];
         taken[start] = true;
@@ -109,9 +105,9 @@ where
                         .id()]
                     <= max
                 {
-                    path.push(end_node);
+                    path.push(end);
                 }
-                return Some(path.into_iter());
+                return Some(path);
             }
 
             let dist = WeightedIndex::new(
@@ -128,11 +124,11 @@ where
             //println!("looking at {num_considered} out of {} elements: chosen elem {choice}", desirabilities.len());
 
             current = desirabilities[choice].0.index();
-            path.push(graph.from_index(current));
+            path.push(current);
             taken[current] = true;
             current_cost = current_cost + desirabilities[choice].2;
         }
 
-        Some(path.into_iter())
+        Some(path)
     }
 }

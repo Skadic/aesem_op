@@ -1,6 +1,6 @@
 use petgraph::{Graph, adj::NodeIndex};
 
-pub mod tsiligiridi_s_algo;
+pub mod tsiligirides_s_algo;
 
 /*
 pub struct AlgoChain<F: OrienteeringAlgo<W, C, Dir, Idx>, S: OrienteeringAlgoAdapter<W, C, Dir, Idx, F::PathType>, W, C, Dir, Idx> {
