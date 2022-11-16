@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use std::fmt::Debug;
 
 use petgraph::{
-    adj::{ NodeIndex, IndexType},
+    adj::NodeIndex,
     visit::{EdgeRef, NodeIndexable, NodeRef},
     Graph, Undirected,
 };
@@ -37,7 +37,6 @@ impl OrienteeringAlgo<f64, f64, Undirected, usize> for SAlgorithm {
     ) -> Option<Self::PathType> {
         let n = graph.node_count();
 
-        let start_node = graph.from_index(start);
         let end_node = graph.from_index(end);
 
         // Initializazion
@@ -62,7 +61,13 @@ impl OrienteeringAlgo<f64, f64, Undirected, usize> for SAlgorithm {
                         let edge_from_next_to_end = graph
                             .edges_connecting(neigh.target().id(), end_node)
                             .next()
-                            .expect(format!("node {} does not have an edge to the end node", neigh.target().id().index()).as_str())
+                            .expect(
+                                format!(
+                                    "node {} does not have an edge to the end node",
+                                    neigh.target().id().index()
+                                )
+                                .as_str(),
+                            )
                             .id();
                         let to_next_weight = graph[neigh.id()];
                         let to_end_weight = graph[edge_from_next_to_end];
@@ -72,12 +77,7 @@ impl OrienteeringAlgo<f64, f64, Undirected, usize> for SAlgorithm {
                     .map(|neigh| (neigh.target(), (&graph[neigh.target()], &graph[neigh.id()])))
                     // Calculate the unnormalized desirability
                     .map(|(node_id, (&score, &cost))| {
-                        (
-                            node_id,
-                            (score / cost)
-                                .powf(self.power_factor),
-                            cost,
-                        )
+                        (node_id, (score / cost).powf(self.power_factor), cost)
                     })
                     .collect::<Vec<_>>();
 

@@ -2,9 +2,9 @@ use std::io::Write;
 use std::{collections::HashSet, fs::File};
 
 use instances::InstanceReadError;
-use petgraph::adj::NodeIndex;
+
 use petgraph::dot::Config;
-use petgraph::visit::{NodeRef, NodeIndexable};
+use petgraph::visit::NodeIndexable;
 use petgraph::{dot::Dot, visit::EdgeRef, Graph};
 
 use crate::algos::{tsiligirides_s_algo::SAlgorithm, OrienteeringAlgo};
