@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use petgraph::{Graph, Undirected, adj::NodeIndex};
+use petgraph::{Graph, Undirected};
 use thiserror::Error;
 
 #[derive(Debug, Error)]

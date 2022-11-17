@@ -25,7 +25,7 @@ impl SAlgorithm {
     }
 }
 
-impl OrienteeringAlgo<f64, f64, Undirected, usize> for SAlgorithm {
+impl OrienteeringAlgo for SAlgorithm {
     type PathType = Vec<NodeIndex<usize>>;
 
     fn generate_path(

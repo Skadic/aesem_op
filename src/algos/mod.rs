@@ -1,5 +1,7 @@
-use petgraph::{Graph, adj::NodeIndex};
+use petgraph::{Graph, Undirected};
 
+pub mod szwarc_boryczka;
+#[allow(unused)]
 pub mod tsiligirides_s_algo;
 
 /*
@@ -14,9 +16,9 @@ impl<W, C, Dir, Idx, F: OrienteeringAlgo<W, C, Dir, Idx>, S: OrienteeringAlgoAda
 */
 //self.algo.generate_path(graph, start, end).map(|p| self.ada.adapt_path(graph, p))
 
-pub trait OrienteeringAlgo<W, C, Dir, Idx> {
+pub trait OrienteeringAlgo {
     type PathType;
-    fn generate_path(&mut self, graph: &Graph<W, C, Dir, Idx>, start: usize, end: usize, max: C) -> Option<Self::PathType>;
+    fn generate_path(&mut self, graph: &Graph<f64, f64, Undirected, usize>, start: usize, end: usize, max: f64) -> Option<Self::PathType>;
 
     /*fn chain<Ada: OrienteeringAlgoAdapter<W, C, Dir, Idx, >>(self, ada: Ada) -> AlgoChain<Self, Ada>
     where
