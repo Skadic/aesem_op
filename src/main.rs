@@ -10,7 +10,8 @@ use petgraph::{dot::Dot, visit::EdgeRef, Graph};
 use crate::algos::szwarc_boryczka::util::f64_cmp;
 use crate::algos::szwarc_boryczka::SzwarcBoryczka;
 use crate::algos::Solution;
-use crate::algos::{tsiligirides_s_algo::SAlgorithm, OrienteeringAlgo};
+use crate::algos::tsiligiridis_ri_algo::RIAlgorithm;
+use crate::algos::{tsiligiridis_s_algo::SAlgorithm, OrienteeringAlgo};
 
 mod algos;
 mod instances;
@@ -21,14 +22,14 @@ fn main() -> Result<(), InstanceReadError> {
     };
     pretty_env_logger::init();
 
-    let (graph, node_positions) = instances::read_instance("res/tsiligirides1.txt")?;
+    let (graph, node_positions) = instances::read_instance("res/chao66.txt")?;
 
-    let mut algo = SAlgorithm::new(4f64, 3);
-    //let mut algo = SzwarcBoryczka::new(50, 0.97, 0.0, 100000)
-        //.unwrap();
+    //let mut algo = SAlgorithm::new(4f64, 4).chain(RIAlgorithm);
+    let mut algo = SzwarcBoryczka::new(50, 0.97, 0.0, 100000)
+        .unwrap();
 
     let Solution { path, score, cost } = match (0..1)
-        .filter_map(|_| algo.generate_path(&graph, 0, graph.node_count() - 1, 85f64))
+        .filter_map(|_| algo.generate_path(&graph, 0, graph.node_count() - 1, 105f64))
         .max_by(|a, b| f64_cmp(&a.score, &b.score))
     {
         Some(path) => path,
@@ -60,7 +61,7 @@ fn main() -> Result<(), InstanceReadError> {
         "{}",
         Dot::with_attr_getters(
             &graph,
-            &[Config::EdgeNoLabel, Config::NodeIndexLabel],
+            &[Config::EdgeNoLabel],//, Config::NodeIndexLabel],
             &|_, edge| if path_edges.contains(&edge.id()) {
                 "color=red".to_owned()
             } else {

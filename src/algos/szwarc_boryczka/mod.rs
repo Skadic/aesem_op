@@ -2,7 +2,7 @@ use crate::algos::szwarc_boryczka::util::f64_cmp;
 
 use self::{util::{edge_weight, random_path}, harmony_memory::HarmonyMemory};
 use super::{
-    score_cmp, tsiligirides_s_algo::SAlgorithm, OrienteeringAlgo, Solution, StandardGraph,
+    score_cmp, tsiligiridis_s_algo::SAlgorithm, OrienteeringAlgo, Solution, StandardGraph,
 };
 use log::{trace, debug};
 use petgraph::visit::{EdgeRef, NodeIndexable};

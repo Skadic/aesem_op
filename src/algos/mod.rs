@@ -5,23 +5,35 @@ use petgraph::{
     Graph, Undirected,
 };
 
+#[allow(unused)]
 pub mod szwarc_boryczka;
 #[allow(unused)]
-pub mod tsiligirides_s_algo;
+pub mod tsiligiridis_s_algo;
 
-/*
-pub struct AlgoChain<F: OrienteeringAlgo<W, C, Dir, Idx>, S: OrienteeringAlgoAdapter<W, C, Dir, Idx, F::PathType>, W, C, Dir, Idx> {
+#[allow(unused)]
+pub mod tsiligiridis_ri_algo;
+
+pub type StandardGraph = Graph<f64, f64, Undirected, usize>;
+
+pub struct AlgoChain<F: OrienteeringAlgo, S: OrienteeringAlgoAdapter> {
     algo: F,
     ada: S,
 }
 
-impl<W, C, Dir, Idx, F: OrienteeringAlgo<W, C, Dir, Idx>, S: OrienteeringAlgoAdapter<W, C, Dir, Idx, F::PathType>> OrienteeringAlgo<W, C, Dir, Idx> for AlgoChain<F, S, W, C, Dir, Idx> {
-    type PathType = S::PathType;
+impl<F: OrienteeringAlgo, S: OrienteeringAlgoAdapter> OrienteeringAlgo for AlgoChain<F, S> {
+    fn generate_path(
+        &mut self,
+        graph: &StandardGraph,
+        start: usize,
+        end: usize,
+        max: f64,
+    ) -> Option<Solution> {
+        self.algo
+            .generate_path(graph, start, end, max)
+            .map(|path| self.ada.adapt_path(graph, path, max))
+    }
 }
-*/
-//self.algo.generate_path(graph, start, end).map(|p| self.ada.adapt_path(graph, p))
 
-type StandardGraph = Graph<f64, f64, Undirected, usize>;
 
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct Solution {
@@ -43,7 +55,11 @@ impl Solution {
             .sum();
         let cost = path
             .windows(2)
-            .flat_map(|nodes| graph.edges_connecting(nodes[0].into(), nodes[1].into()).next())
+            .flat_map(|nodes| {
+                graph
+                    .edges_connecting(nodes[0].into(), nodes[1].into())
+                    .next()
+            })
             .map(|edge| graph[edge.id()])
             .sum();
 
@@ -60,19 +76,14 @@ pub trait OrienteeringAlgo {
         max: f64,
     ) -> Option<Solution>;
 
-    /*fn chain<Ada: OrienteeringAlgoAdapter<W, C, Dir, Idx, >>(self, ada: Ada) -> AlgoChain<Self, Ada>
+    fn chain<Ada: OrienteeringAlgoAdapter>(self, ada: Ada) -> AlgoChain<Self, Ada>
     where
         Self: Sized,
     {
         AlgoChain { algo: self, ada }
-    }*/
+    }
 }
-/*
-pub trait OrienteeringAlgoAdapter<W, C, Dir, Idx, InPath> {
-    type PathType;
-    fn adapt_path(
-        &mut self,
-        graph: &Graph<W, C, Dir, Idx>,
-        path: InPath,
-    ) -> Self::PathType;
-}*/
+
+pub trait OrienteeringAlgoAdapter {
+    fn adapt_path(&mut self, graph: &StandardGraph, solution: Solution, max: f64) -> Solution;
+}
