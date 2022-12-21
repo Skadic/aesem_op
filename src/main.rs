@@ -3,31 +3,43 @@ use std::{collections::HashSet, fs::File};
 
 use instances::InstanceReadError;
 
+use log::info;
 use petgraph::dot::Config;
-use petgraph::visit::NodeIndexable;
 use petgraph::{dot::Dot, visit::EdgeRef, Graph};
 
+use crate::algos::szwarc_boryczka::util::f64_cmp;
+use crate::algos::szwarc_boryczka::SzwarcBoryczka;
+use crate::algos::Solution;
 use crate::algos::{tsiligirides_s_algo::SAlgorithm, OrienteeringAlgo};
 
 mod algos;
 mod instances;
 
 fn main() -> Result<(), InstanceReadError> {
-    let (graph, node_positions) = instances::read_instance("res/tsiligirides2.txt")?;
+    if std::env::var_os("RUST_LOG").is_none() {
+        std::env::set_var("RUST_LOG", "info");
+    };
+    pretty_env_logger::init();
 
-    let path =
-        match SAlgorithm::new(0.5f64, 10).generate_path(&graph, 0, graph.node_count() - 1, 20f64) {
-            Some(path) => path,
-            None => {
-                println!("No path found");
-                return Ok(());
-            }
-        };
-    println!("Found path: {path:?}");
-    println!(
-        "Path score: {}",
-        path.iter().map(|&n| graph[graph.from_index(n)]).sum::<f64>()
-    );
+    let (graph, node_positions) = instances::read_instance("res/tsiligirides1.txt")?;
+
+    let mut algo = SAlgorithm::new(4f64, 3);
+    //let mut algo = SzwarcBoryczka::new(50, 0.97, 0.0, 100000)
+        //.unwrap();
+
+    let Solution { path, score, cost } = match (0..1)
+        .filter_map(|_| algo.generate_path(&graph, 0, graph.node_count() - 1, 85f64))
+        .max_by(|a, b| f64_cmp(&a.score, &b.score))
+    {
+        Some(path) => path,
+        None => {
+            info!("No path found");
+            return Ok(());
+        }
+    };
+    info!("Found path: {path:?}");
+    info!("Path score: {score}");
+    info!("Path cost: {cost}");
 
     let path_edges = path
         .windows(2)
@@ -41,11 +53,6 @@ fn main() -> Result<(), InstanceReadError> {
         .collect::<HashSet<_>>();
     let path = path.into_iter().collect::<HashSet<_>>();
 
-    println!(
-        "Path weight: {}",
-        path_edges.iter().map(|&e| graph[e]).sum::<f64>()
-    );
-
     let mut out_file = File::create("out.dot")?;
 
     writeln!(
@@ -53,18 +60,18 @@ fn main() -> Result<(), InstanceReadError> {
         "{}",
         Dot::with_attr_getters(
             &graph,
-            &[Config::EdgeNoLabel],
+            &[Config::EdgeNoLabel, Config::NodeIndexLabel],
             &|_, edge| if path_edges.contains(&edge.id()) {
                 "color=red".to_owned()
             } else {
                 "style=invis".to_owned()
             },
             &|_, node| format!(
-                "pos=\"{},{}!\" ",
-                node_positions[node.0.index()].0,
-                node_positions[node.0.index()].1
+                "pos=\"{},{}\" ",
+                node_positions[node.0.index()].0 * 50.0,
+                node_positions[node.0.index()].1 * 50.0
             ) + if node.0.index() == 0 || node.0.index() == graph.node_count() - 1 {
-                "color=pink"
+                "color=green"
             } else if path.contains(&node.0.index()) {
                 "color=red"
             } else {

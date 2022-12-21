@@ -8,7 +8,7 @@ use petgraph::{
 };
 use rand::{distributions::WeightedIndex, prelude::Distribution, thread_rng};
 
-use super::OrienteeringAlgo;
+use super::{OrienteeringAlgo, Solution};
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct SAlgorithm {
@@ -26,15 +26,13 @@ impl SAlgorithm {
 }
 
 impl OrienteeringAlgo for SAlgorithm {
-    type PathType = Vec<NodeIndex<usize>>;
-
     fn generate_path(
         &mut self,
         graph: &Graph<f64, f64, Undirected, usize>,
         start: usize,
         end: usize,
         max: f64,
-    ) -> Option<Self::PathType> {
+    ) -> Option<Solution> {
         let n = graph.node_count();
 
         let end_node = graph.from_index(end);
@@ -107,21 +105,21 @@ impl OrienteeringAlgo for SAlgorithm {
                 {
                     path.push(end);
                 }
-                return Some(path);
+                return Some(Solution::evaluate(path, graph));
             }
 
-            let dist = WeightedIndex::new(
-                desirabilities
-                    .iter()
-                    .map(|(_, desirability, _)| desirability),
-            )
-            .expect("no weight should be below 0 and the weights shouldn't be all 0");
+            let choice = if desirabilities.len() == 1 {
+                0
+            } else {
+                let dist = WeightedIndex::new(
+                    desirabilities
+                        .iter()
+                        .map(|(_, desirability, _)| desirability),
+                )
+                .expect("no weight should be below 0 and the weights shouldn't be all 0");
 
-            //println!("desirabilities: {desirabilities:?}");
-            //println!("distribution: {dist:?}");
-
-            let choice = dist.sample(&mut rng);
-            //println!("looking at {num_considered} out of {} elements: chosen elem {choice}", desirabilities.len());
+                dist.sample(&mut rng)
+            };
 
             current = desirabilities[choice].0.index();
             path.push(current);
@@ -129,6 +127,6 @@ impl OrienteeringAlgo for SAlgorithm {
             current_cost = current_cost + desirabilities[choice].2;
         }
 
-        Some(path)
+        Some(Solution::evaluate(path, graph))
     }
 }
